@@ -40,3 +40,6 @@ Estatisticas (Empates) - 108
 ```
 
 Essa tabela foi gerada com o filtro de 2020/21 que foi a temporada 2020 do campeonato basileiro.
+
+
+Fonte de dados: https://github.com/adaoduque/Brasileirao_Dataset
