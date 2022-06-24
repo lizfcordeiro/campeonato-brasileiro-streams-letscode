@@ -23,6 +23,8 @@ public class Main {
                 new Aluno("pedro", 8.0, 19, Genero.MASCULINO),
                 new Aluno("jessica", 6.0, 18, Genero.FEMININO),
                 new Aluno("alice", 4.5, 22, Genero.FEMININO),
+                new Aluno("jessica", 6.0, 18, Genero.FEMININO),
+                new Aluno("alice", 4.5, 22, Genero.FEMININO),
                 new Aluno("alice", 4.5, 22, Genero.FEMININO)
         ));
 
