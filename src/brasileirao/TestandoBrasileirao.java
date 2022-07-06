@@ -27,9 +27,11 @@ public class TestandoBrasileirao {
 
         Set<PosicaoTabela> posicoes = brasileirao.tabela();
 
-        imprimirEstatisticas(brasileirao);
+        brasileirao.lerArquivo(file).forEach(System.out::println);
 
-        imprimirTabela(posicoes);
+        //imprimirEstatisticas(brasileirao);
+
+        //imprimirTabela(posicoes);
 
     }
 

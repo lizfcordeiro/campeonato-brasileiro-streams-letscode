@@ -14,13 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.IntSummaryStatistics;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -40,7 +34,6 @@ public class Brasileirao {
                 .collect(Collectors.groupingBy(
                         Jogo::rodada,
                         Collectors.mapping(Function.identity(), Collectors.toList())));
-
     }
 
     public Map<Jogo, Integer> mediaGolsPorJogo() {
@@ -48,43 +41,51 @@ public class Brasileirao {
     }
 
     public IntSummaryStatistics estatisticasPorJogo() {
-        return null;
+        return todosOsJogos().stream()
+                .collect(Collectors.summarizingInt(jogo -> jogo.mandantePlacar() + jogo.visitantePlacar()));
     }
 
     public List<Jogo> todosOsJogos() {
-        return null;
+        return this.jogos.stream()
+                .filter(filtro)
+                .toList();
     }
 
     public Long totalVitoriasEmCasa() {
-        return null;
+        return todosOsJogos().stream().filter(jogo -> jogo.mandantePlacar() > jogo.visitantePlacar()).count();
     }
 
     public Long totalVitoriasForaDeCasa() {
-        return null;
+        return todosOsJogos().stream().filter(jogo -> jogo.mandantePlacar() < jogo.visitantePlacar()).count();
     }
 
     public Long totalEmpates() {
-        return null;
+        return todosOsJogos().stream().filter(jogo -> jogo.mandantePlacar().equals(jogo.visitantePlacar())).count();
     }
 
     public Long totalJogosComMenosDe3Gols() {
-        return null;
+        return todosOsJogos().stream().map(jogo -> jogo.mandantePlacar() + jogo.visitantePlacar()).filter(gols -> gols < 3).count();
     }
 
     public Long totalJogosCom3OuMaisGols() {
-        return null;
+        return todosOsJogos().stream().map(jogo -> jogo.mandantePlacar() + jogo.visitantePlacar()).filter(gols -> gols >= 3).count();
     }
 
     public Map<Resultado, Long> todosOsPlacares() {
-        return null;
+        List<Resultado> resultados = todosOsJogos().stream().map(jogo -> new Resultado(jogo.mandantePlacar(), jogo.visitantePlacar()))
+                .toList();
+        return resultados.stream()
+                .collect(Collectors
+                .toMap(resultado -> resultado, resultado -> (long) Collections.frequency(resultados, resultado), (a, b) -> a
+        ));
     }
 
     public Map.Entry<Resultado, Long> placarMaisRepetido() {
-        return null;
+        return todosOsPlacares().entrySet().stream().max(Comparator.comparing(Map.Entry::getValue)).orElse(null);
     }
 
     public Map.Entry<Resultado, Long> placarMenosRepetido() {
-        return null;
+        return todosOsPlacares().entrySet().stream().min(Comparator.comparing(Map.Entry::getValue)).orElse(null);
     }
 
     private List<Time> todosOsTimes() {
@@ -103,44 +104,70 @@ public class Brasileirao {
 
     /**
      * todos os jogos que cada time foi mandante
-     * @return Map<Time, List<Jogo>>
+     *
+     * @return Map<Time, List < Jogo>>
      */
     private Map<Time, List<Jogo>> todosOsJogosPorTimeComoMandantes() {
-        return null;
+        return todosOsJogos().stream().collect(Collectors.groupingBy(Jogo::mandante));
     }
-
     /**
      * todos os jogos que cada time foi visitante
-     * @return Map<Time, List<Jogo>>
+     *
+     * @return Map<Time, List < Jogo>>
      */
     private Map<Time, List<Jogo>> todosOsJogosPorTimeComoVisitante() {
-        return null;
+
+        return todosOsJogos().stream().collect(Collectors.groupingBy(Jogo::visitante));
     }
 
     public Map<Time, List<Jogo>> todosOsJogosPorTime() {
-        return null;
+        return Stream.concat(todosOsJogosPorTimeComoMandantes().entrySet().stream(), todosOsJogosPorTimeComoVisitante().entrySet().stream())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> {
+                            a.addAll(b);
+                            return a;
+                        }
+                ));
     }
-
-    public Map<Time, Map<Boolean, List<Jogo>>> jogosParticionadosPorMandanteTrueVisitanteFalse() {
-        return null;
-    }
+    //public Map<Time, Map<Boolean, List<Jogo>>> jogosParticionadosPorMandanteTrueVisitanteFalse() {
+    //    return null;
+    //}
 
     public Set<PosicaoTabela> tabela() {
+
         return null;
     }
 
     public List<Jogo> lerArquivo(Path file) throws IOException {
-        return null;
+        List<String> lista = Files.readAllLines(file);
+        lista.replaceAll(x -> x.replace(":", "h"));
+
+        List<String[]> campoArquivo = lista.stream()
+                .skip(1)
+                .map(linha -> linha.split(";"))
+                .toList();
+
+        return campoArquivo.stream()
+                .map(campo ->
+                        new Jogo(Integer.valueOf(campo[0]),
+                                new DataDoJogo(LocalDate.parse(campo[1], DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                                        LocalTime.parse(horaVazia(campo[2]), DateTimeFormatter.ofPattern("HH'h'mm")), getDayOfWeek(campo[3])),
+                                new Time(campo[4]),
+                                new Time(campo[5]),
+                                new Time(campo[6]),
+                                campo[7], Integer.valueOf(campo[8]), Integer.valueOf(campo[9]), campo[10], campo[11], campo[12])).toList();
     }
 
     private DayOfWeek getDayOfWeek(String dia) {
         return Map.of(
-                "Segunda-feira", DayOfWeek.SUNDAY,
-                "Terça-feira", DayOfWeek.SUNDAY,
-                "Quarta-feira", DayOfWeek.SUNDAY,
-                "Quinta-feira", DayOfWeek.SUNDAY,
-                "Sexta-feira", DayOfWeek.SUNDAY,
-                "Sábado", DayOfWeek.SUNDAY,
+                "Segunda-feira", DayOfWeek.MONDAY,
+                "Terça-feira", DayOfWeek.TUESDAY,
+                "Quarta-feira", DayOfWeek.WEDNESDAY,
+                "Quinta-feira", DayOfWeek.THURSDAY,
+                "Sexta-feira", DayOfWeek.FRIDAY,
+                "Sábado", DayOfWeek.SATURDAY,
                 "Domingo", DayOfWeek.SUNDAY
         ).get(dia);
     }
@@ -159,5 +186,10 @@ public class Brasileirao {
         return null;
     }
 
-
+    private String horaVazia(String hora) {
+        if (hora.isEmpty()) {
+            return "16h00";
+        }
+        return hora;
+    }
 }
