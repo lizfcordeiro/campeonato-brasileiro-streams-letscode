@@ -136,8 +136,17 @@ public class Brasileirao {
     //}
 
     public Set<PosicaoTabela> tabela() {
-
-        return null;
+        List<PosicaoTabela> posicaoTabelas = todosOsJogosPorTime().keySet()
+                .stream()
+                .map(time -> new PosicaoTabela(time,
+                        totalDeVitoriasPorTime(time),
+                        totalDeDerrotasPorTime(time),
+                        totalDeEmpatesPorTime(time),
+                        totalDeGolsPorTime(time),
+                        totalDeGolsSofridosPorTime(time),
+                        totalDeGolsPorTime(time) - totalDeGolsSofridosPorTime(time)))
+                .sorted(Comparator.comparing(PosicaoTabela::getPontuacaoTotal).reversed()).toList();
+        return new LinkedHashSet<>(posicaoTabelas);
     }
 
     public List<Jogo> lerArquivo(Path file) throws IOException {
@@ -178,12 +187,12 @@ public class Brasileirao {
         return null;
     }
 
-    private Map<Time, Integer> totalDeGolsPorTime() {
-        return null;
+    private Long totalDeGolsPorTime(Time time) {
+        return Long.valueOf(todosOsJogosPorTime().get(time).stream().mapToInt(jogo -> {if(jogo.mandante().equals(time)){return jogo.mandantePlacar();
+        } else if (jogo.visitante().equals(time)) {return jogo.visitantePlacar();}return 0;}).sum());
     }
 
-    private Map<Integer, Double> mediaDeGolsPorRodada() {
-        return null;
+    private Map<Integer, Double> mediaDeGolsPorRodada() { return null;
     }
 
     private String horaVazia(String hora) {
@@ -192,4 +201,21 @@ public class Brasileirao {
         }
         return hora;
     }
+
+    private Long totalDeVitoriasPorTime(Time time){
+        return todosOsJogosPorTime().get(time).stream().filter(t -> t.vencedor().equals(time)).count();
+    }
+
+    private Long totalDeDerrotasPorTime(Time time){
+        return todosOsJogosPorTime().get(time).stream().filter(t -> !t.vencedor().equals(time)).count();
+    }
+    private Long totalDeEmpatesPorTime(Time time){
+        return todosOsJogosPorTime().get(time).stream().filter(t -> t.estadoVencedor().equals("-")).count();
+    }
+
+    private Long totalDeGolsSofridosPorTime(Time time){
+        return Long.valueOf(todosOsJogosPorTime().get(time).stream().mapToInt(jogo -> {if(!jogo.mandante().equals(time)){return jogo.mandantePlacar();
+        } else if (!jogo.visitante().equals(time)) {return jogo.visitantePlacar();}return 0;}).sum());
+    }
+
 }
